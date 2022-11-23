@@ -1,28 +1,32 @@
-import { Observable } from "rxjs";
+import { forkJoin } from "rxjs";
 import { ajax } from "rxjs/ajax";
 
-// code observable
-const ajax$ = ajax<any>("https://random-data-api.com/api/name/random_name");
+const randomName$ = ajax("https://random-data-api.com/api/name/random_name");
+const randomNation$ = ajax(
+  "https://random-data-api.com/api/nation/random_nation",
+);
+const randomFood$ = ajax("https://random-data-api.com/api/food/random_food");
 
-ajax$.subscribe((data) => console.log("Sub1: ", data.response.first_name));
-ajax$.subscribe((data) => console.log("Sub2: ", data.response.first_name));
-ajax$.subscribe((data) => console.log("Sub3: ", data.response.first_name));
-
-// hot observable
-const helloButton = document.querySelector("button#hello");
-const helloClick$ = new Observable((subscriber) => {
-  helloButton.addEventListener("click", (event) => {
-    subscriber.next(event);
-  });
-});
-
-helloClick$.subscribe((event: any) =>
-  console.log("Click 1:", event.type, event.x, event.y),
+randomName$.subscribe((ajaxResponse: any) =>
+  console.log(ajaxResponse.response.first_name),
+);
+randomNation$.subscribe((ajaxResponse: any) =>
+  console.log(ajaxResponse.response.capital),
+);
+randomFood$.subscribe((ajaxResponse: any) =>
+  console.log(ajaxResponse.response.dish),
 );
 
-setTimeout(() => {
-  console.log("Subscription 2 starts");
-  helloClick$.subscribe((event: any) =>
-    console.log("Click 2:", event.type, event.x, event.y),
-  );
-}, 5000);
+forkJoin([randomName$, randomNation$, randomFood$]).subscribe(
+  ([nameAjax, nationAjax, foodAjax]) =>
+    console.log(
+      `${[
+        // @ts-ignore
+        nameAjax.response.first_name,
+        // @ts-ignore
+        nationAjax.response.capital,
+        // @ts-ignore
+        foodAjax.response.dish,
+      ]}`,
+    ),
+);
